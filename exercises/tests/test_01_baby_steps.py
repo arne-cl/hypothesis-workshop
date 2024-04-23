@@ -6,7 +6,7 @@ property-based test.
 from typing import TypeVar
 
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import example,given, strategies as st
 
 # Exercise 1: Run the following test
 @given(
@@ -38,30 +38,25 @@ def square(i: int) -> int:
     return i*i
 
 
-@pytest.mark.skip
-def test_square_positive_number():
-    number = 42
-    result = square(number)
-    assert result == 1764
+@given(st.integers())
+def test_square_positive_number(number):
+    assert square(number) == number ** 2
 
+@given(st.integers(max_value=-1))
+def test_square_negative_number(number):
+    assert square(number) == number ** 2
 
-@pytest.mark.skip
-def test_square_negative_number():
-    number = -5
-    result = square(number)
-    assert result == 25
+@example(0)
+@given(st.integers())
+def test_square_zero(number):
+    assert square(number) == number ** 2
 
-
-@pytest.mark.skip
-def test_square_zero():
-    number = 0
-    result = square(number)
-    assert result == 0
-
-
-def test_square():
-    pytest.skip()  # Remove this
-    # Your code goes here
+@example(-5)
+@example(0)
+@example(22)
+@given(st.integers())
+def test_square(number):
+    assert square(number) == number ** 2
 
 
 
@@ -71,11 +66,25 @@ def test_square():
 T = TypeVar("T", int, float)
 
 def square2(i: T) -> T:
+    """
+    Errors we COULD deal with:
+
+    >>> 10**155 ** 2
+    ValueError: Exceeds the limit (4300 digits) for integer string conversion
+
+    >>> float(10**155) ** 2
+    OverflowError: (34, 'Numerical result out of range')
+    """
     return i*i
 
-def test_square2():
-    pytest.skip()  # Remove this
-    # Your code goes here
+@given(
+    st.one_of(
+        st.integers(min_value=-10**154, max_value=10**154),
+        st.floats(min_value=-1e+154, max_value=1e+154, allow_nan=False)
+    )
+)
+def test_square2(number):
+    assert square2(number) == number ** 2
 
 
 
